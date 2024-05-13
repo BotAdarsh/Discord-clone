@@ -1,30 +1,29 @@
-import { currentUser, redirectToSignIn } from "@clerk/nextjs/server";
+import { currentUser,redirectToSignIn } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 
-export const initialProfile = async (): Promise<Profile> => {
+export const initialProfile = async () => {
     const user = await currentUser();
 
-    if (!user) {
+    if(!user) {
         return redirectToSignIn();
     }
 
-    // Assuming Profile is the Prisma model type
-    const profile: Profile | null = await db.profile.findUnique({
-        where: {
-            userId: user.id
+    const profile = await db.profile.findUnique({//findUnique is the function in prisma ORM
+        where:{
+            userId: user.id // user.id refers to the id of the user in the application
         }
     });
 
-    if (profile) {
+    if(profile) { 
         return profile;
     }
 
-    const newProfile = await db.profile.create({
-        data: {
+    const newProfile = await db.profile.create({//create is the funciton in prisma orm to create a new record with parameter data
+        data:{
             userId: user.id,
             name: `${user.firstName} ${user.lastName}`,
             imageUrl: user.imageUrl,
-            email: user.emailAddresses[0].emailAddress
+            email: user.emailAddresses[0].emailAddress // accesses the first email address associated with the user
         }
     });
     return newProfile;
