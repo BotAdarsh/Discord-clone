@@ -1,9 +1,8 @@
-"use client"
+"use client";
 
 import axios from "axios";
 import * as z from "zod";//Importing the Zod validation library
 import { zodResolver } from "@hookform/resolvers/zod";//zodResolver is used for conjunction with form libraries like'react-hook-form'to integrate zod schemas for form validation.
-import { useEffect,useState } from "react";
 import { useForm } from "react-hook-form";//Custom react hook provided by the 'react-hook-form' library used to initialize and manage form state.
 
 import {
@@ -29,6 +28,8 @@ import { Button } from "@/components/ui/button";
 
 import { FileUpload } from "@/components/file-upload";
 import { useRouter } from "next/navigation";
+import { useModal } from "@/hooks/use-modal-store";
+import { useEffect } from "react";
 
 const formSchema = z.object({//is defined for form validation it specifies namd and image url.
     name: z.string().min(1,{
@@ -40,14 +41,13 @@ const formSchema = z.object({//is defined for form validation it specifies namd 
 });
 
 
-export const InitialModal = () =>{//React funcitonal component  responsible for rendering the modal dialog
-    const[isMounted,setIsMounted] = useState(false);
-
+export const EditServerModal = () =>{
+    const { isOpen, onClose, type, data } = useModal();
     const router = useRouter();
 
-    useEffect(() =>{
-        setIsMounted(true);
-    },[]);
+    const isModalOpen = isOpen && type === "editServer";
+    const { server } = data;
+
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues:{
@@ -56,26 +56,35 @@ export const InitialModal = () =>{//React funcitonal component  responsible for 
         }
     });
 
+    useEffect(()=>{
+        if(server){
+            form.setValue("name", server.name);
+            form.setValue("imageUrl", server.imageUrl);
+        }
+    },[server, form])
+
     const isLoading = form.formState.isSubmitting;//checking if form is currently loading
 
     const onSubmit = async(values: z.infer<typeof formSchema>) =>{
         try{
-            await axios.post("/api/servers",values);
+            await axios.patch(`/api/servers/${server?.id}`,values);
 
             form.reset();
             router.refresh();
-            window.location.reload();//use to refresh the page
+            onClose();
         } catch (error) {
             console.log(error);
         }
     }
 
-    if(!isMounted){//To solve hydration warning
-        return null;
+    const handleClose = () => {
+        form.reset();
+        onClose();
     }
 
+
     return(
-        <Dialog open>
+        <Dialog open={isModalOpen} onOpenChange={handleClose}>
             <DialogContent className="bg-white text-black p-0 overflow-hidden">
                 <DialogHeader className="pt-8 px-6">
                     <DialogTitle className="text-2xl text-center font-bold">
@@ -127,7 +136,7 @@ export const InitialModal = () =>{//React funcitonal component  responsible for 
                         </div>
                         <DialogFooter className="bg-gray-100 px-6 py-4">
                             <Button variant="primary"disabled={isLoading}>
-                                Create 
+                                Save 
                             </Button>
                         </DialogFooter>
                     </form>

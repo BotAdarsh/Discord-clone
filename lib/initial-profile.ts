@@ -1,11 +1,11 @@
-import { currentUser,redirectToSignIn } from "@clerk/nextjs/server";
+import { currentUser,redirectToSignIn,auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 
 export const initialProfile = async () => {
     const user = await currentUser();
 
     if(!user) {
-        return redirectToSignIn();
+        return auth().redirectToSignIn();
     }
 
     const profile = await db.profile.findUnique({//findUnique is the function in prisma ORM
@@ -18,7 +18,7 @@ export const initialProfile = async () => {
         return profile;
     }
 
-    const newProfile = await db.profile.create({//create is the funciton in prisma orm to create a new record with parameter data
+    const newProfile = await db.profile.create({//create is the funciton in prisma orm to create a new record with parameter data and stores it in databse.
         data:{
             userId: user.id,
             name: `${user.firstName} ${user.lastName}`,
