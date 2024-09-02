@@ -31,12 +31,12 @@ export default function RootLayout({
           defaultTheme = "dark"
           enableSystem = {false}
           storageKey="discord-theme">
-            <SocketProvider>
-            <ModalProvider />
-            <QueryProvider>
+          <SocketProvider>
+          <ModalProvider />
+          <QueryProvider>
               {children}
-            </QueryProvider>
-            </SocketProvider>
+          </QueryProvider>
+          </SocketProvider>
           </ThemeProvider>
           </body>
       </html>
